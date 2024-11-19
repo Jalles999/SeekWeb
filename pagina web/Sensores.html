@@ -119,103 +119,76 @@
         </div>
     </div>
 
-    <script>
-        // Alternar entre gráficos
-        const tabs = document.querySelectorAll('.tabs button');
-        const charts = document.querySelectorAll('.chart-container');
+   <script>
+    const MAX_POINTS = 20; // Limite de pontos no gráfico
+    const UPDATE_INTERVAL = 100; // Atualização a cada 100ms
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                charts.forEach(chart => chart.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-            });
+    const accelerometerChart = createChart('accelerometerChart', 'm/s²');
+    const gyroscopeChart = createChart('gyroscopeChart', 'rad/s');
+    const compassChart = createChart('compassChart', 'graus');
+
+    const statusEl = document.getElementById('connectionStatus');
+    let ws;
+    let buffer = { Accelerometer: [], Gyroscope: [], Compass: [] };
+
+    function connectWebSocket() {
+        ws = new WebSocket('wss://20.241.18.98:3001'); 
+
+        ws.onopen = () => {
+            statusEl.textContent = 'Conectado ao servidor';
+            statusEl.className = 'status connected';
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const { Sensor, X = 0, Y = 0, Z = 0 } = data;
+
+            // Armazena os dados no buffer correspondente ao sensor
+            if (buffer[Sensor]) {
+                buffer[Sensor].push({ X, Y, Z, timestamp: new Date().toLocaleTimeString() });
+            }
+        };
+
+        ws.onclose = () => {
+            statusEl.textContent = 'Desconectado. Tentando reconectar...';
+            statusEl.className = 'status disconnected';
+            setTimeout(connectWebSocket, 5000);
+        };
+    }
+
+    function updateChart(chart, data) {
+        if (chart.data.labels.length >= MAX_POINTS) {
+            chart.data.labels.shift();
+        }
+        chart.data.labels.push(data.timestamp);
+
+        [data.X, data.Y, data.Z].forEach((value, i) => {
+            if (chart.data.datasets[i].data.length >= MAX_POINTS) {
+                chart.data.datasets[i].data.shift();
+            }
+            chart.data.datasets[i].data.push(value);
         });
 
-        function createChart(canvasId, yAxisLabel) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array(20).fill(''),
-                    datasets: [
-                        { label: 'Eixo X', data: Array(20).fill(null), borderColor: 'rgb(255, 99, 132)', borderWidth: 2 },
-                        { label: 'Eixo Y', data: Array(20).fill(null), borderColor: 'rgb(54, 162, 235)', borderWidth: 2 },
-                        { label: 'Eixo Z', data: Array(20).fill(null), borderColor: 'rgb(75, 192, 192)', borderWidth: 2 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    animation: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#ffffff' // Texto claro para legendas
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: '#ffffff' }, // Eixo X claro
-                            grid: { color: '#444444' }   // Grid escuro
-                        },
-                        y: {
-                            ticks: { color: '#ffffff' }, // Eixo Y claro
-                            grid: { color: '#444444' }, // Grid escuro
-                            title: { display: true, text: yAxisLabel, color: '#ffffff' }
-                        }
-                    }
-                }
-            });
-        }
+        chart.update();
+    }
 
-        const accelerometerChart = createChart('accelerometerChart', 'm/s²');
-        const gyroscopeChart = createChart('gyroscopeChart', 'rad/s');
-        const compassChart = createChart('compassChart', 'graus');
-
-        const statusEl = document.getElementById('connectionStatus');
-        let ws;
-
-        function connectWebSocket() {
-            ws = new WebSocket('wss://20.241.18.98:3001'); 
-            ws.onopen = () => {
-                statusEl.textContent = 'Conectado ao servidor';
-                statusEl.className = 'status connected';
-            };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const { Sensor, X = 0, Y = 0, Z = 0 } = data;
-
-                const chart = Sensor === 'Accelerometer' ? accelerometerChart
-                            : Sensor === 'Gyroscope' ? gyroscopeChart
+    function processBuffer() {
+        // Processa e atualiza os gráficos com dados acumulados no buffer
+        Object.keys(buffer).forEach(sensor => {
+            const sensorBuffer = buffer[sensor];
+            if (sensorBuffer.length > 0) {
+                const data = sensorBuffer.shift();
+                const chart = sensor === 'Accelerometer' ? accelerometerChart
+                            : sensor === 'Gyroscope' ? gyroscopeChart
                             : compassChart;
+                updateChart(chart, data);
+            }
+        });
 
-                const timestamp = new Date().toLocaleTimeString();
-                if (chart.data.labels.length >= 20) {
-                    chart.data.labels.shift();
-                }
-                chart.data.labels.push(timestamp);
+        // Solicita próxima atualização
+        setTimeout(processBuffer, UPDATE_INTERVAL);
+    }
 
-                [X, Y, Z].forEach((value, i) => {
-                    if (chart.data.datasets[i].data.length >= 20) {
-                        chart.data.datasets[i].data.shift();
-                    }
-                    chart.data.datasets[i].data.push(value);
-                });
-
-                chart.update();
-            };
-
-            ws.onclose = () => {
-                statusEl.textContent = 'Desconectado. Tentando reconectar...';
-                statusEl.className = 'status disconnected';
-                setTimeout(connectWebSocket, 5000);
-            };
-        }
-
-        connectWebSocket();
-    </script>
-</body>
-</html>
+    connectWebSocket();
+    processBuffer(); // Inicia o processamento dos dados no buffer
+</script>
