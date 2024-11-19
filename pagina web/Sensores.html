@@ -10,22 +10,22 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #121212; 
-            color: #ffffff; 
+            background-color: #121212; /* Fundo escuro */
+            color: #ffffff; /* Texto claro */
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #1e1e1e; 
+            background-color: #1e1e1e; /* Fundo para os gráficos */
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
             text-align: center;
-            color: #ffffff;
+            color: #ffffff; /* Texto branco */
             margin-bottom: 30px;
         }
 
@@ -38,8 +38,8 @@
         .tabs button {
             margin: 0 5px;
             padding: 10px 20px;
-            background-color: #333333; 
-            color: #ffffff; 
+            background-color: #333333; /* Botões escuros */
+            color: #ffffff; /* Texto branco */
             border: 1px solid #444444;
             border-radius: 4px;
             cursor: pointer;
@@ -48,13 +48,13 @@
         }
 
         .tabs button.active {
-            background-color: #007bff;
+            background-color: #007bff; /* Botão ativo em azul */
             color: #ffffff;
         }
 
         .chart-container {
             display: none;
-            background: #1e1e1e;
+            background: #1e1e1e; /* Fundo escuro */
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
@@ -75,13 +75,13 @@
 
         .status.connected {
             display: block;
-            color: #81c784; 
+            color: #81c784; /* Verde claro */
             background-color: #2e7d32;
         }
 
         .status.disconnected {
             display: block;
-            color: #ffccbc; 
+            color: #ffccbc; /* Vermelho claro */
             background-color: #d32f2f;
         }
     </style>
@@ -119,89 +119,102 @@
         </div>
     </div>
 
- <script>
-    const MAX_POINTS = 20; // Limite de pontos no gráfico
-    const UPDATE_INTERVAL = 100; // Atualização a cada 100ms
+    <script>
+              const tabs = document.querySelectorAll('.tabs button');
+        const charts = document.querySelectorAll('.chart-container');
 
-    const accelerometerChart = createChart('accelerometerChart', 'm/s²');
-    const gyroscopeChart = createChart('gyroscopeChart', 'rad/s');
-    const compassChart = createChart('compassChart', 'graus');
-
-    const statusEl = document.getElementById('connectionStatus');
-    const tabs = document.querySelectorAll('.tabs button');
-    const charts = document.querySelectorAll('.chart-container');
-    let ws;
-    let buffer = { Accelerometer: [], Gyroscope: [], Compass: [] };
-
-    // Alternar entre gráficos
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            charts.forEach(chart => chart.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.tab).classList.add('active');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                charts.forEach(chart => chart.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
         });
-    });
 
-    function connectWebSocket() {
-        ws = new WebSocket('wss://20.241.18.98:3001'); 
-
-        ws.onopen = () => {
-            statusEl.textContent = 'Conectado ao servidor';
-            statusEl.className = 'status connected';
-        };
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const { Sensor, X = 0, Y = 0, Z = 0 } = data;
-
-            // Armazena os dados no buffer correspondente ao sensor
-            if (buffer[Sensor]) {
-                buffer[Sensor].push({ X, Y, Z, timestamp: new Date().toLocaleTimeString() });
-            }
-        };
-
-        ws.onclose = () => {
-            statusEl.textContent = 'Desconectado. Tentando reconectar...';
-            statusEl.className = 'status disconnected';
-            setTimeout(connectWebSocket, 5000);
-        };
-    }
-
-    function updateChart(chart, data) {
-        if (chart.data.labels.length >= MAX_POINTS) {
-            chart.data.labels.shift();
+        function createChart(canvasId, yAxisLabel) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(20).fill(''),
+                    datasets: [
+                        { label: 'Eixo X', data: Array(20).fill(null), borderColor: 'rgb(255, 99, 132)', borderWidth: 2 },
+                        { label: 'Eixo Y', data: Array(20).fill(null), borderColor: 'rgb(54, 162, 235)', borderWidth: 2 },
+                        { label: 'Eixo Z', data: Array(20).fill(null), borderColor: 'rgb(75, 192, 192)', borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff' 
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#ffffff' }, 
+                            grid: { color: '#444444' }  
+                        },
+                        y: {
+                            ticks: { color: '#ffffff' }, 
+                            grid: { color: '#444444' },
+                            title: { display: true, text: yAxisLabel, color: '#ffffff' }
+                        }
+                    }
+                }
+            });
         }
-        chart.data.labels.push(data.timestamp);
 
-        [data.X, data.Y, data.Z].forEach((value, i) => {
-            if (chart.data.datasets[i].data.length >= MAX_POINTS) {
-                chart.data.datasets[i].data.shift();
-            }
-            chart.data.datasets[i].data.push(value);
-        });
+        const accelerometerChart = createChart('accelerometerChart', 'm/s²');
+        const gyroscopeChart = createChart('gyroscopeChart', 'rad/s');
+        const compassChart = createChart('compassChart', 'graus');
 
-        chart.update();
-    }
+        const statusEl = document.getElementById('connectionStatus');
+        let ws;
 
-    function processBuffer() {
-        // Processa e atualiza os gráficos com dados acumulados no buffer
-        Object.keys(buffer).forEach(sensor => {
-            const sensorBuffer = buffer[sensor];
-            if (sensorBuffer.length > 0) {
-                const data = sensorBuffer.shift();
-                const chart = sensor === 'Accelerometer' ? accelerometerChart
-                            : sensor === 'Gyroscope' ? gyroscopeChart
+        function connectWebSocket() {
+            ws = new WebSocket('wss://20.241.18.98:3001'); 
+            ws.onopen = () => {
+                statusEl.textContent = 'Conectado ao servidor';
+                statusEl.className = 'status connected';
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const { Sensor, X = 0, Y = 0, Z = 0 } = data;
+
+                const chart = Sensor === 'Accelerometer' ? accelerometerChart
+                            : Sensor === 'Gyroscope' ? gyroscopeChart
                             : compassChart;
-                updateChart(chart, data);
-            }
-        });
 
-        // Solicita próxima atualização
-        setTimeout(processBuffer, UPDATE_INTERVAL);
-    }
+                const timestamp = new Date().toLocaleTimeString();
+                if (chart.data.labels.length >= 20) {
+                    chart.data.labels.shift();
+                }
+                chart.data.labels.push(timestamp);
 
-    // Inicia a conexão e o processamento
-    connectWebSocket();
-    processBuffer();
-</script>
+                [X, Y, Z].forEach((value, i) => {
+                    if (chart.data.datasets[i].data.length >= 20) {
+                        chart.data.datasets[i].data.shift();
+                    }
+                    chart.data.datasets[i].data.push(value);
+                });
+
+                chart.update();
+            };
+
+            ws.onclose = () => {
+                statusEl.textContent = 'Desconectado. Tentando reconectar...';
+                statusEl.className = 'status disconnected';
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
