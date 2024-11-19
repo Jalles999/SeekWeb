@@ -119,17 +119,29 @@
         </div>
     </div>
 
-   <script>
-    const MAX_POINTS = 20; 
-    const UPDATE_INTERVAL = 100; 
+ <script>
+    const MAX_POINTS = 20; // Limite de pontos no gráfico
+    const UPDATE_INTERVAL = 100; // Atualização a cada 100ms
 
     const accelerometerChart = createChart('accelerometerChart', 'm/s²');
     const gyroscopeChart = createChart('gyroscopeChart', 'rad/s');
     const compassChart = createChart('compassChart', 'graus');
 
     const statusEl = document.getElementById('connectionStatus');
+    const tabs = document.querySelectorAll('.tabs button');
+    const charts = document.querySelectorAll('.chart-container');
     let ws;
     let buffer = { Accelerometer: [], Gyroscope: [], Compass: [] };
+
+    // Alternar entre gráficos
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            charts.forEach(chart => chart.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
 
     function connectWebSocket() {
         ws = new WebSocket('wss://20.241.18.98:3001'); 
@@ -143,7 +155,7 @@
             const data = JSON.parse(event.data);
             const { Sensor, X = 0, Y = 0, Z = 0 } = data;
 
-            
+            // Armazena os dados no buffer correspondente ao sensor
             if (buffer[Sensor]) {
                 buffer[Sensor].push({ X, Y, Z, timestamp: new Date().toLocaleTimeString() });
             }
@@ -173,7 +185,7 @@
     }
 
     function processBuffer() {
-       
+        // Processa e atualiza os gráficos com dados acumulados no buffer
         Object.keys(buffer).forEach(sensor => {
             const sensorBuffer = buffer[sensor];
             if (sensorBuffer.length > 0) {
@@ -185,10 +197,11 @@
             }
         });
 
-     
+        // Solicita próxima atualização
         setTimeout(processBuffer, UPDATE_INTERVAL);
     }
 
+    // Inicia a conexão e o processamento
     connectWebSocket();
-    processBuffer(); /
+    processBuffer();
 </script>
