@@ -196,7 +196,7 @@
             ws.onclose = () => {
                 statusEl.textContent = 'Desconectado. Tentando reconectar...';
                 statusEl.className = 'status disconnected';
-                setTimeout(connectWebSocket, 5000);
+                setTimeout(connectWebSocket, 4000);
             };
         }
 
