@@ -1,3 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento de Sensores</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tabs button {
+            margin: 0 5px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .tabs button.active {
+            background-color: #0056b3;
+        }
+
+        .chart-container {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chart-container.active {
+            display: block;
+        }
+
+        .chart-wrapper {
+            height: 300px;
+            width: 100%;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .status.connected {
+            display: block;
+            color: #2e7d32;
+        }
+
+        .status.disconnected {
+            display: block;
+            color: #c62828;
+            background-color: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Monitoramento de Sensores</h1>
+        <div id="connectionStatus" class="status">Conectando...</div>
+
+        <div class="tabs">
+            <button data-tab="accelerometer" class="active">Acelerômetro</button>
+            <button data-tab="gyroscope">Giroscópio</button>
+            <button data-tab="compass">Bússola</button>
+        </div>
+
+        <div id="accelerometer" class="chart-container active">
+            <h2>Acelerômetro</h2>
+            <div class="chart-wrapper">
+                <canvas id="accelerometerChart"></canvas>
+            </div>
+        </div>
+
+        <div id="gyroscope" class="chart-container">
+            <h2>Giroscópio</h2>
+            <div class="chart-wrapper">
+                <canvas id="gyroscopeChart"></canvas>
+            </div>
+        </div>
+
+        <div id="compass" class="chart-container">
+            <h2>Bússola</h2>
+            <div class="chart-wrapper">
+                <canvas id="compassChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+
 <script>
     // Alternar entre gráficos
     const tabs = document.querySelectorAll('.tabs button');
