@@ -162,7 +162,8 @@
         let ws;
 
         function connectWebSocket() {
-            ws = new WebSocket('ws://20.241.18.98:3001');
+            // Alterando a URL para o IP da VM e a porta 3001
+            ws = new WebSocket('ws://20.241.18.98:3001'); // Certifique-se de que essa porta está aberta e sendo usada no Node.js
 
             ws.onopen = () => {
                 statusEl.textContent = 'Conectado ao servidor';
