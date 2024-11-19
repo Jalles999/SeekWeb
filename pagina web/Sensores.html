@@ -162,7 +162,7 @@
         let ws;
 
         function connectWebSocket() {
-            ws = new WebSocket('ws//20.241.18.98:3001');
+            ws = new WebSocket('ws://20.241.18.98:3001');
 
             ws.onopen = () => {
                 statusEl.textContent = 'Conectado ao servidor';
