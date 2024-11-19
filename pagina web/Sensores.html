@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoramento de Sensores</title>
+    <title>Seek.</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #121212; /* Fundo escuro */
-            color: #ffffff; /* Texto claro */
+            background-color: #121212; 
+            color: #ffffff; 
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #1e1e1e; /* Fundo para os gráficos */
+            background-color: #1e1e1e; 
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
             text-align: center;
-            color: #ffffff; /* Texto branco */
+            color: #ffffff;
             margin-bottom: 30px;
         }
 
@@ -38,8 +38,8 @@
         .tabs button {
             margin: 0 5px;
             padding: 10px 20px;
-            background-color: #333333; /* Botões escuros */
-            color: #ffffff; /* Texto branco */
+            background-color: #333333; 
+            color: #ffffff; 
             border: 1px solid #444444;
             border-radius: 4px;
             cursor: pointer;
@@ -48,13 +48,13 @@
         }
 
         .tabs button.active {
-            background-color: #007bff; /* Botão ativo em azul */
+            background-color: #007bff;
             color: #ffffff;
         }
 
         .chart-container {
             display: none;
-            background: #1e1e1e; /* Fundo escuro */
+            background: #1e1e1e;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
@@ -75,20 +75,20 @@
 
         .status.connected {
             display: block;
-            color: #81c784; /* Verde claro */
+            color: #81c784; 
             background-color: #2e7d32;
         }
 
         .status.disconnected {
             display: block;
-            color: #ffccbc; /* Vermelho claro */
+            color: #ffccbc; 
             background-color: #d32f2f;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Monitoramento de Sensores</h1>
+        <h1>Seek!</h1>
         <div id="connectionStatus" class="status">Conectando...</div>
 
         <div class="tabs">
@@ -120,8 +120,8 @@
     </div>
 
    <script>
-    const MAX_POINTS = 20; // Limite de pontos no gráfico
-    const UPDATE_INTERVAL = 100; // Atualização a cada 100ms
+    const MAX_POINTS = 20; 
+    const UPDATE_INTERVAL = 100; 
 
     const accelerometerChart = createChart('accelerometerChart', 'm/s²');
     const gyroscopeChart = createChart('gyroscopeChart', 'rad/s');
@@ -143,7 +143,7 @@
             const data = JSON.parse(event.data);
             const { Sensor, X = 0, Y = 0, Z = 0 } = data;
 
-            // Armazena os dados no buffer correspondente ao sensor
+            
             if (buffer[Sensor]) {
                 buffer[Sensor].push({ X, Y, Z, timestamp: new Date().toLocaleTimeString() });
             }
@@ -173,7 +173,7 @@
     }
 
     function processBuffer() {
-        // Processa e atualiza os gráficos com dados acumulados no buffer
+       
         Object.keys(buffer).forEach(sensor => {
             const sensorBuffer = buffer[sensor];
             if (sensorBuffer.length > 0) {
@@ -185,10 +185,10 @@
             }
         });
 
-        // Solicita próxima atualização
+     
         setTimeout(processBuffer, UPDATE_INTERVAL);
     }
 
     connectWebSocket();
-    processBuffer(); // Inicia o processamento dos dados no buffer
+    processBuffer(); /
 </script>
